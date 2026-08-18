@@ -1,147 +1,221 @@
-// Navegación entre secciones
-function showSection(id, event) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    
-    document.getElementById(id).classList.add('active');
-    event.currentTarget.classList.add('active');
-}
-
-// Cargar datos al iniciar
 document.addEventListener('DOMContentLoaded', () => {
     loadHosts();
     loadMedia();
-    loadDocs();
+    loadAsistencias();
 });
 
-// Helper para convertir archivo a Base64
-const fileToBase64 = file => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-});
+// --- NAVEGACIÓN Y PESTAÑAS ---
+function showSection(sectionId, event) {
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(sec => sec.classList.remove('active'));
 
-// --- GESTIÓN DE ARCHIVOS MULTIMEDIA ---
-document.getElementById('uploadForm')?.addEventListener('submit', async (e) => {
+    const buttons = document.querySelectorAll('.nav-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+}
+
+// --- AUXILIAR: CONVERTIR ARCHIVOS A BASE64 ---
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
+
+// --- 1. GESTIÓN DE ARCHIVOS MULTIMEDIA ---
+document.getElementById('mediaForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const title = document.getElementById('fileTitle').value;
-    const photoFiles = document.getElementById('photoInput').files;
-    const videoFiles = document.getElementById('videoInput').files;
-    const audioFile = document.getElementById('audioInput').files[0];
-    const locationUrl = document.getElementById('locationInput').value;
+    const title = document.getElementById('mediaTitle').value;
+    const photoFiles = document.getElementById('mediaPhotos').files;
+    const videoFiles = document.getElementById('mediaVideos').files;
+    const audioFile = document.getElementById('mediaAudio').files[0];
+    const location = document.getElementById('mediaLocation').value;
 
     try {
-        // Procesar fotos obligatorias
         const photos = [];
         for (let i = 0; i < photoFiles.length; i++) {
             photos.push(await fileToBase64(photoFiles[i]));
         }
 
-        // Procesar videos opcionales
         const videos = [];
-        if (videoFiles && videoFiles.length > 0) {
-            for (let i = 0; i < videoFiles.length; i++) {
-                videos.push(await fileToBase64(videoFiles[i]));
-            }
+        for (let i = 0; i < videoFiles.length; i++) {
+            videos.push(await fileToBase64(videoFiles[i]));
         }
 
-        // Procesar audio de WhatsApp
-        const audio = audioFile ? await fileToBase64(audioFile) : null;
+        let audio = null;
+        if (audioFile) {
+            audio = await fileToBase64(audioFile);
+        }
 
-        const reportItem = {
+        const now = new Date();
+        const formattedDate = `${now.toLocaleDateString()} a las ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+        const mediaReport = {
             id: Date.now(),
             title: title,
             photos: photos,
             videos: videos,
             audio: audio,
-            location: locationUrl,
-            date: new Date().toLocaleDateString()
+            location: location,
+            date: formattedDate
         };
 
-        const mediaList = JSON.parse(localStorage.getItem('mediaReports') || '[]');
-        mediaList.push(reportItem);
-        localStorage.setItem('mediaReports', JSON.stringify(mediaList));
+        const reports = JSON.parse(localStorage.getItem('mediaReports') || '[]');
+        reports.push(mediaReport);
+        localStorage.setItem('mediaReports', JSON.stringify(reports));
 
-        document.getElementById('uploadForm').reset();
+        document.getElementById('mediaForm').reset();
         loadMedia();
     } catch (error) {
-        console.error("Error al guardar el reporte multimedia:", error);
+        console.error("Error al guardar multimedia:", error);
     }
 });
 
 function loadMedia() {
-    const mediaList = JSON.parse(localStorage.getItem('mediaReports') || '[]');
+    const reports = JSON.parse(localStorage.getItem('mediaReports') || '[]');
     const container = document.getElementById('mediaContainer');
-    
-    if (container) {
-        if (mediaList.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-muted);">No hay reportes registrados.</p>';
-            return;
-        }
 
-        container.innerHTML = mediaList.map((item, index) => `
-            <div class="media-card">
-                <h3>${item.title}</h3>
-                <small style="color: var(--text-muted);">Fecha: ${item.date}</small>
-                
-                <!-- Galería de Fotos -->
-                <div class="photo-gallery">
-                    ${item.photos.map(p => `<img src="${p}" alt="Foto del evento">`).join('')}
-                </div>
+    if (!container) return;
 
-                <!-- Videos (Opcionales) -->
-                ${item.videos && item.videos.length > 0 ? `
-                    <div class="video-container">
-                        ${item.videos.map(v => `<video src="${v}" controls></video>`).join('')}
-                    </div>
-                ` : ''}
-
-                <!-- Audio de WhatsApp -->
-                ${item.audio ? `
-                    <div style="margin-top: 10px;">
-                        <label style="font-size:0.85rem; font-weight:bold;">Audio adjunto:</label>
-                        <audio src="${item.audio}" controls style="width: 100%; margin-top: 4px;"></audio>
-                    </div>
-                ` : ''}
-
-                <!-- Ubicación Google Maps / WhatsApp -->
-                <div style="margin-top: 12px; font-size: 0.9rem;">
-                    📍 <a href="${item.location}" target="_blank" style="color: var(--guinda-main); font-weight: bold; text-decoration: none;">
-                        Ver Ubicación en Mapa
-                    </a>
-                </div>
-
-                <div style="margin-top: 12px; text-align: right;">
-                    <button class="btn-delete" onclick="deleteMedia(${index})">Eliminar Reporte</button>
-                </div>
-            </div>
-        `).join('');
+    if (reports.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">No hay reportes multimedia cargados.</p>';
+        return;
     }
+
+    container.innerHTML = reports.map((r, index) => `
+        <div class="media-card">
+            <h3>${r.title}</h3>
+            <small style="color: var(--text-muted);">📅 ${r.date}</small>
+
+            <div class="photo-gallery" style="margin-top: 10px;">
+                ${r.photos.map(p => `<img src="${p}" alt="Fotografía">`).join('')}
+            </div>
+
+            ${r.videos && r.videos.length > 0 ? `
+                <div class="video-gallery" style="margin-top: 10px;">
+                    ${r.videos.map(v => `<video src="${v}" controls style="width: 100%; max-height: 200px; border-radius: 8px;"></video>`).join('')}
+                </div>
+            ` : ''}
+
+            ${r.audio ? `
+                <div style="margin-top: 10px;">
+                    <label><strong>Audio adjunto:</strong></label>
+                    <audio src="${r.audio}" controls style="width: 100%; margin-top: 5px;"></audio>
+                </div>
+            ` : ''}
+
+            <div style="margin-top: 12px;">
+                📍 <a href="${r.location}" target="_blank" rel="noopener noreferrer">Ver Ubicación en Mapa</a>
+            </div>
+
+            <div style="margin-top: 12px; text-align: right;">
+                <button class="btn-delete" onclick="deleteMedia(${index})">Eliminar Reporte</button>
+            </div>
+        </div>
+    `).join('');
 }
 
 function deleteMedia(index) {
-    const mediaList = JSON.parse(localStorage.getItem('mediaReports') || '[]');
-    mediaList.splice(index, 1);
-    localStorage.setItem('mediaReports', JSON.stringify(mediaList));
+    const reports = JSON.parse(localStorage.getItem('mediaReports') || '[]');
+    reports.splice(index, 1);
+    localStorage.setItem('mediaReports', JSON.stringify(reports));
     loadMedia();
 }
 
-// --- GESTIÓN DE ANFITRIONES ---
+// --- 2. GESTIÓN DE ASISTENCIAS / PROMOCIONES ---
+document.getElementById('asistenciaForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('asistenciaTitle').value;
+    const photoFiles = document.getElementById('asistenciaPhotos').files;
+
+    try {
+        const photos = [];
+        for (let i = 0; i < photoFiles.length; i++) {
+            photos.push(await fileToBase64(photoFiles[i]));
+        }
+
+        const now = new Date();
+        const formattedDate = `${now.toLocaleDateString()} a las ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+        const asistenciaItem = {
+            id: Date.now(),
+            title: title,
+            photos: photos,
+            date: formattedDate
+        };
+
+        const list = JSON.parse(localStorage.getItem('asistencias') || '[]');
+        list.push(asistenciaItem);
+        localStorage.setItem('asistencias', JSON.stringify(list));
+
+        document.getElementById('asistenciaForm').reset();
+        loadAsistencias();
+    } catch (error) {
+        console.error("Error al registrar la asistencia:", error);
+    }
+});
+
+function loadAsistencias() {
+    const list = JSON.parse(localStorage.getItem('asistencias') || '[]');
+    const container = document.getElementById('asistenciasContainer');
+
+    if (!container) return;
+
+    if (list.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">No hay registros de asistencias o promociones.</p>';
+        return;
+    }
+
+    container.innerHTML = list.map((item, index) => `
+        <div class="media-card">
+            <h3>${item.title}</h3>
+            <small style="color: var(--text-muted);">📅 Registrado el: <strong>${item.date}</strong></small>
+
+            <div class="photo-gallery" style="margin-top: 10px;">
+                ${item.photos.map(p => `<img src="${p}" alt="Evidencia fotográfica">`).join('')}
+            </div>
+
+            <div style="margin-top: 12px; text-align: right;">
+                <button class="btn-delete" onclick="deleteAsistencia(${index})">Eliminar</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function deleteAsistencia(index) {
+    const list = JSON.parse(localStorage.getItem('asistencias') || '[]');
+    list.splice(index, 1);
+    localStorage.setItem('asistencias', JSON.stringify(list));
+    loadAsistencias();
+}
+
+// --- 3. GESTIÓN DE ANFITRIONES ---
 document.getElementById('hostForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const host = {
-        name: document.getElementById('hostName').value,
-        zone: document.getElementById('hostZone').value,
-        status: document.getElementById('hostStatus').value,
-        email: document.getElementById('hostEmail').value
-    };
+
+    const name = document.getElementById('hostName').value;
+    const zone = document.getElementById('hostZone').value;
+    const status = document.getElementById('hostStatus').value;
+    const email = document.getElementById('hostEmail').value;
+
+    const host = { name, zone, status, email };
 
     const hosts = JSON.parse(localStorage.getItem('hosts') || '[]');
     hosts.push(host);
     localStorage.setItem('hosts', JSON.stringify(hosts));
-    
+
     document.getElementById('hostForm').reset();
     loadHosts();
 });
@@ -149,24 +223,25 @@ document.getElementById('hostForm')?.addEventListener('submit', (e) => {
 function loadHosts() {
     const hosts = JSON.parse(localStorage.getItem('hosts') || '[]');
     const tbody = document.getElementById('hostTableBody');
-    if (tbody) {
-        if (hosts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No hay anfitriones registrados.</td></tr>';
-            return;
-        }
 
-        tbody.innerHTML = hosts.map((h, index) => `
-            <tr>
-                <td>${h.name}</td>
-                <td>${h.zone}</td>
-                <td>${h.status}</td>
-                <td>${h.email}</td>
-                <td>
-                    <button class="btn-delete" onclick="deleteHost(${index})">Eliminar</button>
-                </td>
-            </tr>
-        `).join('');
+    if (!tbody) return;
+
+    if (hosts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No hay anfitriones registrados.</td></tr>';
+        return;
     }
+
+    tbody.innerHTML = hosts.map((h, index) => `
+        <tr>
+            <td>${h.name}</td>
+            <td>${h.zone}</td>
+            <td>${h.status}</td>
+            <td>${h.email}</td>
+            <td>
+                <button class="btn-delete" onclick="deleteHost(${index})">Eliminar</button>
+            </td>
+        </tr>
+    `).join('');
 }
 
 function deleteHost(index) {
@@ -174,54 +249,4 @@ function deleteHost(index) {
     hosts.splice(index, 1);
     localStorage.setItem('hosts', JSON.stringify(hosts));
     loadHosts();
-}
-
-// --- GESTIÓN DE DOCUMENTOS ---
-document.getElementById('docForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const docInput = document.getElementById('docInput');
-    const file = docInput.files[0];
-    const name = document.getElementById('docName').value;
-
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-            const docItem = { name: name, src: event.target.result, fileName: file.name };
-            const docList = JSON.parse(localStorage.getItem('docs') || '[]');
-            docList.push(docItem);
-            localStorage.setItem('docs', JSON.stringify(docList));
-
-            document.getElementById('docForm').reset();
-            loadDocs();
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-function loadDocs() {
-    const docList = JSON.parse(localStorage.getItem('docs') || '[]');
-    const container = document.getElementById('docList');
-    if (container) {
-        if (docList.length === 0) {
-            container.innerHTML = '<li style="color: var(--text-muted);">No hay documentos disponibles.</li>';
-            return;
-        }
-
-        container.innerHTML = docList.map((doc, index) => `
-            <li>
-                <span>📄 <strong>${doc.name}</strong> (${doc.fileName})</span>
-                <div>
-                    <a href="${doc.src}" download="${doc.fileName}" style="margin-right: 10px;">Descargar</a>
-                    <button class="btn-delete" onclick="deleteDoc(${index})">Eliminar</button>
-                </div>
-            </li>
-        `).join('');
-    }
-}
-
-function deleteDoc(index) {
-    const docList = JSON.parse(localStorage.getItem('docs') || '[]');
-    docList.splice(index, 1);
-    localStorage.setItem('docs', JSON.stringify(docList));
-    loadDocs();
 }

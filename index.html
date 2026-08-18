@@ -9,53 +9,53 @@
 <body>
 
     <div class="sidebar">
-    <div class="sidebar-header">
-        <img src="logo.png" alt="Logo Justicia Social" class="sidebar-logo">
-        <h2>Justicia Social</h2>
+        <div class="brand">
+            <img src="logo.png" alt="Logo Justicia Social" class="sidebar-logo">
+            <h2>Justicia Social</h2>
+        </div>
+        <hr>
+        <button class="nav-btn active" onclick="showSection('resumen', event)">Inicio / Resumen</button>
+        <button class="nav-btn" onclick="showSection('multimedia', event)">Archivos Multimedia</button>
+        <button class="nav-btn" onclick="showSection('asistencias', event)">Asistencias / Promociones</button>
+        <button class="nav-btn" onclick="showSection('anfitriones', event)">Anfitriones</button>
+        <button class="nav-btn" onclick="showSection('documentacion', event)">Documentación</button>
     </div>
-    <button class="nav-btn active" onclick="showSection('inicio', event)">Inicio / Resumen</button>
-    <button class="nav-btn" onclick="showSection('multimedia', event)">Archivos Multimedia</button>
-    <button class="nav-btn" onclick="showSection('anfitriones', event)">Anfitriones</button>
-    <button class="nav-btn" onclick="showSection('documentos', event)">Documentación</button>
-</div>
 
     <div class="main-content">
-        <!-- Inicio -->
-        <div id="inicio" class="section active">
-            <h1>Panel de Consulta</h1>
-            <div class="card">
-                <p>Creemos en un futuro de equidad, dignidad y justicia social. Un espacio dedicado al trabajo diario por el bienestar de nuestra gente y la transformación de nuestra sociedad.</p>
-            </div>
+        <!-- Inicio / Resumen -->
+        <div id="resumen" class="section active">
+            <h1>Bienvenido a la Intranet Electoral</h1>
+            <p>Selecciona una opción del menú lateral para gestionar la información.</p>
         </div>
 
         <!-- Archivos Multimedia -->
         <div id="multimedia" class="section">
             <h1>Carga de Archivos Multimedia</h1>
             <div class="card">
-                <form id="uploadForm">
+                <form id="mediaForm">
                     <div class="form-group">
                         <label>Título / Descripción del Reporte:</label>
-                        <input type="text" id="fileTitle" placeholder="Ej. Registro de evento territorial" required>
+                        <input type="text" id="mediaTitle" placeholder="Ej. Registro de evento territorial" required>
                     </div>
 
                     <div class="form-group">
                         <label>1. Fotografías (Obligatorio):</label>
-                        <input type="file" id="photoInput" accept="image/*" multiple required>
+                        <input type="file" id="mediaPhotos" accept="image/*" multiple required>
                     </div>
 
                     <div class="form-group">
                         <label>2. Videos (Opcional):</label>
-                        <input type="file" id="videoInput" accept="video/*" multiple>
+                        <input type="file" id="mediaVideos" accept="video/*" multiple>
                     </div>
 
                     <div class="form-group">
                         <label>3. Audio descargado de WhatsApp (.opus / .mp3 / .m4a / .ogg):</label>
-                        <input type="file" id="audioInput" accept="audio/*,.opus" required>
+                        <input type="file" id="mediaAudio" accept="audio/*,.opus">
                     </div>
 
                     <div class="form-group">
                         <label>4. Enlace de Ubicación (Google Maps o WhatsApp):</label>
-                        <input type="url" id="locationInput" placeholder="Ej. https://maps.google.com/?q=..." required>
+                        <input type="url" id="mediaLocation" placeholder="Ej. https://maps.google.com/?q=..." required>
                     </div>
 
                     <button type="submit" class="btn-submit">Guardar Reporte Multimedia</button>
@@ -68,18 +68,43 @@
             </div>
         </div>
 
+        <!-- Asistencias / Promociones -->
+        <div id="asistencias" class="section">
+            <h1>Registro de Asistencias y Promociones</h1>
+            <div class="card">
+                <form id="asistenciaForm">
+                    <div class="form-group">
+                        <label>Título / Descripción de la Actividad:</label>
+                        <input type="text" id="asistenciaTitle" placeholder="Ej. Promoción de programa territorial / Asistencia a asamblea" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Evidencia Fotográfica (Obligatorio):</label>
+                        <input type="file" id="asistenciaPhotos" accept="image/*" multiple required>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Registrar Asistencia</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Historial de Registros</h2>
+                <div id="asistenciasContainer" class="media-grid"></div>
+            </div>
+        </div>
+
         <!-- Anfitriones -->
         <div id="anfitriones" class="section">
-            <h1>Directorio de Anfitriones</h1>
+            <h1>Gestión de Anfitriones</h1>
             <div class="card">
                 <form id="hostForm">
                     <div class="form-group">
                         <label>Nombre Completo:</label>
-                        <input type="text" id="hostName" placeholder="Nombre completo" required>
+                        <input type="text" id="hostName" required>
                     </div>
                     <div class="form-group">
-                        <label>Zona / Región:</label>
-                        <input type="text" id="hostZone" placeholder="Zona o Municipio" required>
+                        <label>Zona / Territorio:</label>
+                        <input type="text" id="hostZone" required>
                     </div>
                     <div class="form-group">
                         <label>Estado:</label>
@@ -89,21 +114,22 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Correo Electrónico:</label>
-                        <input type="email" id="hostEmail" placeholder="correo@ejemplo.com" required>
+                        <label>Correo de Contacto:</label>
+                        <input type="email" id="hostEmail" required>
                     </div>
-                    <button type="submit" class="btn-submit">Registrar Anfitrión</button>
+                    <button type="submit" class="btn-submit">Agregar Anfitrión</button>
                 </form>
             </div>
 
             <div class="card">
+                <h2>Lista de Anfitriones</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>Nombre</th>
-                            <th>Zona / Región</th>
+                            <th>Zona</th>
                             <th>Estado</th>
-                            <th>Contacto</th>
+                            <th>Correo</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -113,25 +139,9 @@
         </div>
 
         <!-- Documentación -->
-        <div id="documentos" class="section">
-            <h1>Documentos de Consulta</h1>
-            <div class="card">
-                <form id="docForm">
-                    <div class="form-group">
-                        <label>Nombre del Documento:</label>
-                        <input type="text" id="docName" placeholder="Ej. Manual de Operaciones PDF" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Seleccionar Documento (PDF/Word):</label>
-                        <input type="file" id="docInput" accept=".pdf,.doc,.docx" required>
-                    </div>
-                    <button type="submit" class="btn-submit">Subir Documento</button>
-                </form>
-            </div>
-
-            <div class="card">
-                <ul id="docList" class="doc-list"></ul>
-            </div>
+        <div id="documentacion" class="section">
+            <h1>Documentación del Sistema</h1>
+            <p>Guías y recursos institucionales.</p>
         </div>
     </div>
 
