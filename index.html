@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intranet - Justicia Social</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="sidebar">
+    <div class="sidebar-header">
+        <img src="logo.png" alt="Logo Justicia Social" class="sidebar-logo">
+        <h2>Justicia Social</h2>
+    </div>
+    <button class="nav-btn active" onclick="showSection('inicio', event)">Inicio / Resumen</button>
+    <button class="nav-btn" onclick="showSection('multimedia', event)">Archivos Multimedia</button>
+    <button class="nav-btn" onclick="showSection('anfitriones', event)">Anfitriones</button>
+    <button class="nav-btn" onclick="showSection('documentos', event)">Documentación</button>
+</div>
+
+    <div class="main-content">
+        <!-- Inicio -->
+        <div id="inicio" class="section active">
+            <h1>Panel de Consulta</h1>
+            <div class="card">
+                <p>Creemos en un futuro de equidad, dignidad y justicia social. Un espacio dedicado al trabajo diario por el bienestar de nuestra gente y la transformación de nuestra sociedad.</p>
+            </div>
+        </div>
+
+        <!-- Archivos Multimedia -->
+        <div id="multimedia" class="section">
+            <h1>Carga de Archivos Multimedia</h1>
+            <div class="card">
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label>Título / Descripción del Reporte:</label>
+                        <input type="text" id="fileTitle" placeholder="Ej. Registro de evento territorial" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>1. Fotografías (Obligatorio):</label>
+                        <input type="file" id="photoInput" accept="image/*" multiple required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>2. Videos (Opcional):</label>
+                        <input type="file" id="videoInput" accept="video/*" multiple>
+                    </div>
+
+                    <div class="form-group">
+                        <label>3. Audio descargado de WhatsApp (.opus / .mp3 / .m4a / .ogg):</label>
+                        <input type="file" id="audioInput" accept="audio/*,.opus" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>4. Enlace de Ubicación (Google Maps o WhatsApp):</label>
+                        <input type="url" id="locationInput" placeholder="Ej. https://maps.google.com/?q=..." required>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Guardar Reporte Multimedia</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Archivos Subidos</h2>
+                <div id="mediaContainer" class="media-grid"></div>
+            </div>
+        </div>
+
+        <!-- Anfitriones -->
+        <div id="anfitriones" class="section">
+            <h1>Directorio de Anfitriones</h1>
+            <div class="card">
+                <form id="hostForm">
+                    <div class="form-group">
+                        <label>Nombre Completo:</label>
+                        <input type="text" id="hostName" placeholder="Nombre completo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Zona / Región:</label>
+                        <input type="text" id="hostZone" placeholder="Zona o Municipio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado:</label>
+                        <select id="hostStatus">
+                            <option value="Activo">Activo</option>
+                            <option value="Inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Electrónico:</label>
+                        <input type="email" id="hostEmail" placeholder="correo@ejemplo.com" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Registrar Anfitrión</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Zona / Región</th>
+                            <th>Estado</th>
+                            <th>Contacto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hostTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Documentación -->
+        <div id="documentos" class="section">
+            <h1>Documentos de Consulta</h1>
+            <div class="card">
+                <form id="docForm">
+                    <div class="form-group">
+                        <label>Nombre del Documento:</label>
+                        <input type="text" id="docName" placeholder="Ej. Manual de Operaciones PDF" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Seleccionar Documento (PDF/Word):</label>
+                        <input type="file" id="docInput" accept=".pdf,.doc,.docx" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Subir Documento</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <ul id="docList" class="doc-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
