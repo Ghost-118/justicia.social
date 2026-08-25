@@ -1,3 +1,5 @@
+const API_URL = 'https://justicia-social-backend.onrender.com';
+
 document.addEventListener('DOMContentLoaded', () => {
     loadHosts();
     loadMedia();
@@ -62,7 +64,6 @@ document.getElementById('mediaForm')?.addEventListener('submit', async (e) => {
         const formattedDate = `${now.toLocaleDateString()} a las ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
         const mediaReport = {
-            id: Date.now(),
             title: title,
             photos: photos,
             videos: videos,
@@ -71,66 +72,81 @@ document.getElementById('mediaForm')?.addEventListener('submit', async (e) => {
             date: formattedDate
         };
 
-        const reports = JSON.parse(localStorage.getItem('mediaReports') || '[]');
-        reports.push(mediaReport);
-        localStorage.setItem('mediaReports', JSON.stringify(reports));
+        const res = await fetch(`${API_URL}/api/media_reports`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mediaReport)
+        });
 
-        document.getElementById('mediaForm').reset();
-        loadMedia();
+        if (res.ok) {
+            document.getElementById('mediaForm').reset();
+            loadMedia();
+        } else {
+            console.error("Error al guardar multimedia en el servidor");
+        }
     } catch (error) {
         console.error("Error al guardar multimedia:", error);
     }
 });
 
-function loadMedia() {
-    const reports = JSON.parse(localStorage.getItem('mediaReports') || '[]');
+async function loadMedia() {
     const container = document.getElementById('mediaContainer');
-
     if (!container) return;
 
-    if (reports.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted);">No hay reportes multimedia cargados.</p>';
-        return;
+    try {
+        const res = await fetch(`${API_URL}/api/media_reports`);
+        const reports = await res.json();
+
+        if (!reports || reports.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">No hay reportes multimedia cargados.</p>';
+            return;
+        }
+
+        container.innerHTML = reports.map((r) => `
+            <div class="media-card">
+                <h3>${r.title}</h3>
+                <small style="color: var(--text-muted);">📅 ${r.date}</small>
+
+                <div class="photo-gallery" style="margin-top: 10px;">
+                    ${(r.photos || []).map(p => `<img src="${p}" alt="Fotografía">`).join('')}
+                </div>
+
+                ${r.videos && r.videos.length > 0 ? `
+                    <div class="video-gallery" style="margin-top: 10px;">
+                        ${r.videos.map(v => `<video src="${v}" controls style="width: 100%; max-height: 200px; border-radius: 8px;"></video>`).join('')}
+                    </div>
+                ` : ''}
+
+                ${r.audio ? `
+                    <div style="margin-top: 10px;">
+                        <label><strong>Audio adjunto:</strong></label>
+                        <audio src="${r.audio}" controls style="width: 100%; margin-top: 5px;"></audio>
+                    </div>
+                ` : ''}
+
+                <div style="margin-top: 12px;">
+                    📍 <a href="${r.location}" target="_blank" rel="noopener noreferrer">Ver Ubicación en Mapa</a>
+                </div>
+
+                <div style="margin-top: 12px; text-align: right;">
+                    <button class="btn-delete" onclick="deleteMedia(${r.id})">Eliminar Reporte</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error("Error al cargar reportes:", error);
     }
-
-    container.innerHTML = reports.map((r, index) => `
-        <div class="media-card">
-            <h3>${r.title}</h3>
-            <small style="color: var(--text-muted);">📅 ${r.date}</small>
-
-            <div class="photo-gallery" style="margin-top: 10px;">
-                ${r.photos.map(p => `<img src="${p}" alt="Fotografía">`).join('')}
-            </div>
-
-            ${r.videos && r.videos.length > 0 ? `
-                <div class="video-gallery" style="margin-top: 10px;">
-                    ${r.videos.map(v => `<video src="${v}" controls style="width: 100%; max-height: 200px; border-radius: 8px;"></video>`).join('')}
-                </div>
-            ` : ''}
-
-            ${r.audio ? `
-                <div style="margin-top: 10px;">
-                    <label><strong>Audio adjunto:</strong></label>
-                    <audio src="${r.audio}" controls style="width: 100%; margin-top: 5px;"></audio>
-                </div>
-            ` : ''}
-
-            <div style="margin-top: 12px;">
-                📍 <a href="${r.location}" target="_blank" rel="noopener noreferrer">Ver Ubicación en Mapa</a>
-            </div>
-
-            <div style="margin-top: 12px; text-align: right;">
-                <button class="btn-delete" onclick="deleteMedia(${index})">Eliminar Reporte</button>
-            </div>
-        </div>
-    `).join('');
 }
 
-function deleteMedia(index) {
-    const reports = JSON.parse(localStorage.getItem('mediaReports') || '[]');
-    reports.splice(index, 1);
-    localStorage.setItem('mediaReports', JSON.stringify(reports));
-    loadMedia();
+async function deleteMedia(id) {
+    try {
+        const res = await fetch(`${API_URL}/api/media_reports/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadMedia();
+        }
+    } catch (error) {
+        console.error("Error al eliminar reporte:", error);
+    }
 }
 
 // --- 2. GESTIÓN DE ASISTENCIAS / PROMOCIONES ---
@@ -150,59 +166,71 @@ document.getElementById('asistenciaForm')?.addEventListener('submit', async (e) 
         const formattedDate = `${now.toLocaleDateString()} a las ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
         const asistenciaItem = {
-            id: Date.now(),
             title: title,
             photos: photos,
             date: formattedDate
         };
 
-        const list = JSON.parse(localStorage.getItem('asistencias') || '[]');
-        list.push(asistenciaItem);
-        localStorage.setItem('asistencias', JSON.stringify(list));
+        const res = await fetch(`${API_URL}/api/asistencias`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(asistenciaItem)
+        });
 
-        document.getElementById('asistenciaForm').reset();
-        loadAsistencias();
+        if (res.ok) {
+            document.getElementById('asistenciaForm').reset();
+            loadAsistencias();
+        }
     } catch (error) {
         console.error("Error al registrar la asistencia:", error);
     }
 });
 
-function loadAsistencias() {
-    const list = JSON.parse(localStorage.getItem('asistencias') || '[]');
+async function loadAsistencias() {
     const container = document.getElementById('asistenciasContainer');
-
     if (!container) return;
 
-    if (list.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted);">No hay registros de asistencias o promociones.</p>';
-        return;
+    try {
+        const res = await fetch(`${API_URL}/api/asistencias`);
+        const list = await res.json();
+
+        if (!list || list.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">No hay registros de asistencias o promociones.</p>';
+            return;
+        }
+
+        container.innerHTML = list.map((item) => `
+            <div class="media-card">
+                <h3>${item.title}</h3>
+                <small style="color: var(--text-muted);">📅 Registrado el: <strong>${item.date}</strong></small>
+
+                <div class="photo-gallery" style="margin-top: 10px;">
+                    ${(item.photos || []).map(p => `<img src="${p}" alt="Evidencia fotográfica">`).join('')}
+                </div>
+
+                <div style="margin-top: 12px; text-align: right;">
+                    <button class="btn-delete" onclick="deleteAsistencia(${item.id})">Eliminar</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error("Error al cargar asistencias:", error);
     }
-
-    container.innerHTML = list.map((item, index) => `
-        <div class="media-card">
-            <h3>${item.title}</h3>
-            <small style="color: var(--text-muted);">📅 Registrado el: <strong>${item.date}</strong></small>
-
-            <div class="photo-gallery" style="margin-top: 10px;">
-                ${item.photos.map(p => `<img src="${p}" alt="Evidencia fotográfica">`).join('')}
-            </div>
-
-            <div style="margin-top: 12px; text-align: right;">
-                <button class="btn-delete" onclick="deleteAsistencia(${index})">Eliminar</button>
-            </div>
-        </div>
-    `).join('');
 }
 
-function deleteAsistencia(index) {
-    const list = JSON.parse(localStorage.getItem('asistencias') || '[]');
-    list.splice(index, 1);
-    localStorage.setItem('asistencias', JSON.stringify(list));
-    loadAsistencias();
+async function deleteAsistencia(id) {
+    try {
+        const res = await fetch(`${API_URL}/api/asistencias/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadAsistencias();
+        }
+    } catch (error) {
+        console.error("Error al eliminar asistencia:", error);
+    }
 }
 
 // --- 3. GESTIÓN DE ANFITRIONES ---
-document.getElementById('hostForm')?.addEventListener('submit', (e) => {
+document.getElementById('hostForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const name = document.getElementById('hostName').value;
@@ -212,41 +240,58 @@ document.getElementById('hostForm')?.addEventListener('submit', (e) => {
 
     const host = { name, zone, status, email };
 
-    const hosts = JSON.parse(localStorage.getItem('hosts') || '[]');
-    hosts.push(host);
-    localStorage.setItem('hosts', JSON.stringify(hosts));
+    try {
+        const res = await fetch(`${API_URL}/api/hosts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(host)
+        });
 
-    document.getElementById('hostForm').reset();
-    loadHosts();
+        if (res.ok) {
+            document.getElementById('hostForm').reset();
+            loadHosts();
+        }
+    } catch (error) {
+        console.error("Error al registrar anfitrión:", error);
+    }
 });
 
-function loadHosts() {
-    const hosts = JSON.parse(localStorage.getItem('hosts') || '[]');
+async function loadHosts() {
     const tbody = document.getElementById('hostTableBody');
-
     if (!tbody) return;
 
-    if (hosts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No hay anfitriones registrados.</td></tr>';
-        return;
-    }
+    try {
+        const res = await fetch(`${API_URL}/api/hosts`);
+        const hosts = await res.json();
 
-    tbody.innerHTML = hosts.map((h, index) => `
-        <tr>
-            <td>${h.name}</td>
-            <td>${h.zone}</td>
-            <td>${h.status}</td>
-            <td>${h.email}</td>
-            <td>
-                <button class="btn-delete" onclick="deleteHost(${index})">Eliminar</button>
-            </td>
-        </tr>
-    `).join('');
+        if (!hosts || hosts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No hay anfitriones registrados.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = hosts.map((h) => `
+            <tr>
+                <td>${h.name}</td>
+                <td>${h.zone}</td>
+                <td>${h.status}</td>
+                <td>${h.email}</td>
+                <td>
+                    <button class="btn-delete" onclick="deleteHost(${h.id})">Eliminar</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error("Error al cargar anfitriones:", error);
+    }
 }
 
-function deleteHost(index) {
-    const hosts = JSON.parse(localStorage.getItem('hosts') || '[]');
-    hosts.splice(index, 1);
-    localStorage.setItem('hosts', JSON.stringify(hosts));
-    loadHosts();
+async function deleteHost(id) {
+    try {
+        const res = await fetch(`${API_URL}/api/hosts/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadHosts();
+        }
+    } catch (error) {
+        console.error("Error al eliminar anfitrión:", error);
+    }
 }
