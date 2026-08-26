@@ -89,63 +89,60 @@ document.getElementById('mediaForm')?.addEventListener('submit', async (e) => {
     }
 });
 
+// Cargar y mostrar los reportes multimedia
 async function loadMedia() {
-    const container = document.getElementById('mediaContainer');
-    if (!container) return;
-
     try {
-        const res = await fetch(`${API_URL}/api/media_reports`);
-        const reports = await res.json();
+        const response = await fetch(`${API_URL}/api/media`);
+        if (!response.ok) throw new Error('Error al obtener datos');
+        const data = await response.json();
 
-        if (!reports || reports.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-muted);">No hay reportes multimedia cargados.</p>';
+        const container = document.getElementById('mediaContainer'); 
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (data.length === 0) {
+            container.innerHTML = '<p style="color: #666;">No hay reportes subidos aún.</p>';
             return;
         }
 
-        container.innerHTML = reports.map((r) => `
-            <div class="media-card">
-                <h3>${r.title}</h3>
-                <small style="color: var(--text-muted);">📅 ${r.date}</small>
+        data.forEach(item => {
+            let photos = [];
+            let videos = [];
+            try { photos = typeof item.photos === 'string' ? JSON.parse(item.photos) : item.photos; } catch(e) { photos = []; }
+            try { videos = typeof item.videos === 'string' ? JSON.parse(item.videos) : item.videos; } catch(e) { videos = []; }
 
-                <div class="photo-gallery" style="margin-top: 10px;">
-                    ${(r.photos || []).map(p => `<img src="${p}" alt="Fotografía">`).join('')}
-                </div>
+            const div = document.createElement('div');
+            div.className = 'media-card';
 
-                ${r.videos && r.videos.length > 0 ? `
-                    <div class="video-gallery" style="margin-top: 10px;">
-                        ${r.videos.map(v => `<video src="${v}" controls style="width: 100%; max-height: 200px; border-radius: 8px;"></video>`).join('')}
-                    </div>
-                ` : ''}
+            let photosHTML = photos && photos.length ? photos.map(img => `<img src="${img}" style="max-width: 150px; margin: 5px; border-radius: 4px;">`).join('') : '';
+            let videosHTML = videos && videos.length ? videos.map(vid => `<video src="${vid}" controls style="max-width: 250px; margin: 5px;"></video>`).join('') : '';
+            let audioHTML = item.audio ? `<audio src="${item.audio}" controls style="margin-top: 5px; display: block;"></audio>` : '';
+            let locationHTML = item.location ? `<p><a href="${item.location}" target="_blank" rel="noopener noreferrer">📍 Ver Ubicación</a></p>` : '';
 
-                ${r.audio ? `
-                    <div style="margin-top: 10px;">
-                        <label><strong>Audio adjunto:</strong></label>
-                        <audio src="${r.audio}" controls style="width: 100%; margin-top: 5px;"></audio>
-                    </div>
-                ` : ''}
-
-                <div style="margin-top: 12px;">
-                    📍 <a href="${r.location}" target="_blank" rel="noopener noreferrer">Ver Ubicación en Mapa</a>
-                </div>
-
-                <div style="margin-top: 12px; text-align: right;">
-                    <button class="btn-delete" onclick="deleteMedia(${r.id})">Eliminar Reporte</button>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error("Error al cargar reportes:", error);
+            div.innerHTML = `
+                <h3>${item.title || 'Sin título'}</h3>
+                <small style="color: #888;">${item.date_str || item.date || ''}</small>
+                <div style="margin-top: 10px;">${photosHTML}</div>
+                <div style="margin-top: 10px;">${videosHTML}</div>
+                <div>${audioHTML}</div>
+                ${locationHTML}
+                <button class="btn-delete" onclick="deleteMedia(${item.id})" style="margin-top: 10px;">Eliminar</button>
+            `;
+            container.appendChild(div);
+        });
+    } catch (err) {
+        console.error('Error cargando reportes multimedia:', err);
     }
 }
 
 async function deleteMedia(id) {
+    if (!confirm('¿Deseas eliminar este reporte?')) return;
     try {
-        const res = await fetch(`${API_URL}/api/media_reports/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-            loadMedia();
-        }
-    } catch (error) {
-        console.error("Error al eliminar reporte:", error);
+        await fetch(`${API_URL}/api/media/${id}`, { method: 'DELETE' });
+        loadMedia();
+    } catch (err) {
+        console.error('Error al eliminar:', err);
     }
 }
 
@@ -195,17 +192,17 @@ async function loadAsistencias() {
         const list = await res.json();
 
         if (!list || list.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-muted);">No hay registros de asistencias o promociones.</p>';
+            container.innerHTML = '<p style="color: #666;">No hay registros de asistencias o promociones.</p>';
             return;
         }
 
         container.innerHTML = list.map((item) => `
             <div class="media-card">
                 <h3>${item.title}</h3>
-                <small style="color: var(--text-muted);">📅 Registrado el: <strong>${item.date}</strong></small>
+                <small style="color: #888;">📅 Registrado el: <strong>${item.date}</strong></small>
 
                 <div class="photo-gallery" style="margin-top: 10px;">
-                    ${(item.photos || []).map(p => `<img src="${p}" alt="Evidencia fotográfica">`).join('')}
+                    ${(item.photos || []).map(p => `<img src="${p}" alt="Evidencia fotográfica" style="max-width: 150px; margin: 5px;">`).join('')}
                 </div>
 
                 <div style="margin-top: 12px; text-align: right;">
@@ -219,6 +216,7 @@ async function loadAsistencias() {
 }
 
 async function deleteAsistencia(id) {
+    if (!confirm('¿Deseas eliminar este registro?')) return;
     try {
         const res = await fetch(`${API_URL}/api/asistencias/${id}`, { method: 'DELETE' });
         if (res.ok) {
@@ -265,7 +263,7 @@ async function loadHosts() {
         const hosts = await res.json();
 
         if (!hosts || hosts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No hay anfitriones registrados.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No hay anfitriones registrados.</td></tr>';
             return;
         }
 
@@ -273,7 +271,7 @@ async function loadHosts() {
             <tr>
                 <td>${h.name}</td>
                 <td>${h.zone}</td>
-                <td>${h.status}</td>
+                <td><strong>${h.status}</strong></td>
                 <td>${h.email}</td>
                 <td>
                     <button class="btn-delete" onclick="deleteHost(${h.id})">Eliminar</button>
@@ -286,6 +284,7 @@ async function loadHosts() {
 }
 
 async function deleteHost(id) {
+    if (!confirm('¿Deseas eliminar este anfitrión?')) return;
     try {
         const res = await fetch(`${API_URL}/api/hosts/${id}`, { method: 'DELETE' });
         if (res.ok) {
