@@ -3,8 +3,11 @@ const cors = require('cors');
 const pool = require('./db');
 
 const app = express();
+
+// Configuración de CORS y aumento de límite para Base64 (50mb)
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Probar conexión a la BD al iniciar
 pool.connect((err, client, release) => {
@@ -48,8 +51,8 @@ app.delete('/api/hosts/:id', async (req, res) => {
     }
 });
 
-// --- RUTAS MULTIMEDIA ---
-app.get('/api/media', async (req, res) => {
+// --- RUTAS MULTIMEDIA (Soporta /api/media y /api/media_reports) ---
+app.get(['/api/media', '/api/media_reports'], async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM media_reports ORDER BY id DESC');
         res.json(result.rows);
@@ -58,7 +61,7 @@ app.get('/api/media', async (req, res) => {
     }
 });
 
-app.post('/api/media', async (req, res) => {
+app.post(['/api/media', '/api/media_reports'], async (req, res) => {
     const { title, photos, videos, audio, location, date } = req.body;
     try {
         const result = await pool.query(
@@ -71,7 +74,7 @@ app.post('/api/media', async (req, res) => {
     }
 });
 
-app.delete('/api/media/:id', async (req, res) => {
+app.delete(['/api/media/:id', '/api/media_reports/:id'], async (req, res) => {
     const { id } = req.params;
     try {
         await pool.query('DELETE FROM media_reports WHERE id = $1', [id]);
