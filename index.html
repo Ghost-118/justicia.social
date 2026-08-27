@@ -10,33 +10,76 @@
 
     <!-- Menú Lateral -->
     <div class="sidebar">
-        <div class="brand">
+        <div class="sidebar-header">
             <img src="logo.png" alt="Logo Justicia Social" class="sidebar-logo">
             <h2>Justicia Social</h2>
         </div>
-        <hr>
-        <button class="nav-btn active" onclick="showSection('resumen', event)">Inicio / Resumen</button>
-        <button class="nav-btn" onclick="showSection('multimedia', event)">Archivos Multimedia</button>
-        <button class="nav-btn" onclick="showSection('asistencias', event)">Asistencias / Promociones</button>
-        <button class="nav-btn" onclick="showSection('anfitriones', event)">Anfitriones</button>
-        <button class="nav-btn" onclick="showSection('documentacion', event)">Documentación</button>
+        
+        <button class="nav-btn active" onclick="showSection('bitacora', event)">Bitácora General</button>
+        <button class="nav-btn" onclick="showSection('regiduria', event)">Regiduría</button>
+        <button class="nav-btn" onclick="showSection('comunicacion', event)">Comunicación</button>
+        
+        <!-- Grupo Territorio -->
+        <div class="nav-group">
+            <span class="nav-header">Territorio</span>
+            <button class="nav-btn sub-item" onclick="showSection('rrss', event)">RRSS</button>
+            <button class="nav-btn sub-item" onclick="showSection('tv', event)">TV</button>
+            <button class="nav-btn sub-item" onclick="showSection('volanteo', event)">Bitácora Volanteo</button>
+            <button class="nav-btn sub-item" onclick="showSection('comite', event)">Comité</button>
+        </div>
+
+        <button class="nav-btn" onclick="showSection('directorio', event)">Directorio</button>
+        <button class="nav-btn" onclick="showSection('mapa', event)">Mapa Interactivo</button>
+        <button class="nav-btn" onclick="showSection('reportes', event)">Reportes</button>
     </div>
 
     <!-- Contenido Principal -->
     <div class="main-content">
 
-        <!-- Inicio / Resumen -->
-        <div id="resumen" class="section active">
-            <h1>Bienvenido a Justicia Social</h1>
-            <p>Selecciona una opción del menú lateral para gestionar la información.</p>
+        <!-- Bitácora General -->
+        <div id="bitacora" class="section active">
+            <h1>Bitácora General</h1>
+            <p>Bienvenido a la Intranet de Justicia Social. Selecciona una opción del menú lateral para gestionar la información.</p>
             <p style="margin-top: 15px; line-height: 1.6;">
                 🏛️ <strong>Justicia Social</strong> Creemos firmemente en los principios de la equidad, el bienestar colectivo y la transformación de nuestra comunidad. Trabajamos día con día con convicción y corazón para construir un México más justo y fraterno para todas y todos. 🌱✨
             </p>
         </div>
 
-        <!-- Archivos Multimedia -->
-        <div id="multimedia" class="section">
-            <h1>Carga de Archivos Multimedia</h1>
+        <!-- Regiduría -->
+        <div id="regiduria" class="section">
+            <h1>Regiduría</h1>
+            <div class="card">
+                <p>Gestión de asuntos de Regiduría y acuerdos municipales.</p>
+            </div>
+        </div>
+
+        <!-- Comunicación -->
+        <div id="comunicacion" class="section">
+            <h1>Comunicación</h1>
+            <div class="card">
+                <p>Módulo de prensa, comunicados y vinculación institucional.</p>
+            </div>
+        </div>
+
+        <!-- Territorio - RRSS -->
+        <div id="rrss" class="section">
+            <h1>Territorio — Redes Sociales (RRSS)</h1>
+            <div class="card">
+                <p>Seguimiento e indicadores de difusión en redes sociales por territorio.</p>
+            </div>
+        </div>
+
+        <!-- Territorio - TV -->
+        <div id="tv" class="section">
+            <h1>Territorio — TV</h1>
+            <div class="card">
+                <p>Monitoreo y contenidos de televisión y medios audiovisuales.</p>
+            </div>
+        </div>
+
+        <!-- Territorio - Bitácora Volanteo -->
+        <div id="volanteo" class="section">
+            <h1>Territorio — Bitácora de Volanteo</h1>
             <div class="card">
                 <form id="mediaForm">
                     <div class="form-group">
@@ -74,9 +117,9 @@
             </div>
         </div>
 
-        <!-- Asistencias / Promociones -->
-        <div id="asistencias" class="section">
-            <h1>Registro de Asistencias y Promociones</h1>
+        <!-- Territorio - Comité -->
+        <div id="comite" class="section">
+            <h1>Territorio — Comité</h1>
             <div class="card">
                 <form id="asistenciaForm">
                     <div class="form-group">
@@ -94,14 +137,14 @@
             </div>
 
             <div class="card">
-                <h2>Historial de Registros</h2>
+                <h2>Historial de Registros de Comité</h2>
                 <div id="asistenciasContainer" class="media-grid"></div>
             </div>
         </div>
 
-        <!-- Anfitriones -->
-        <div id="anfitriones" class="section">
-            <h1>Gestión de Anfitriones</h1>
+        <!-- Directorio -->
+        <div id="directorio" class="section">
+            <h1>Directorio de Anfitriones y Contactos</h1>
             <div class="card">
                 <form id="hostForm">
                     <div class="form-group">
@@ -123,12 +166,12 @@
                         <label>Correo de Contacto:</label>
                         <input type="email" id="hostEmail" required>
                     </div>
-                    <button type="submit" class="btn-submit">Agregar Anfitrión</button>
+                    <button type="submit" class="btn-submit">Agregar Registro</button>
                 </form>
             </div>
 
             <div class="card">
-                <h2>Lista de Anfitriones</h2>
+                <h2>Lista del Directorio</h2>
                 <table>
                     <thead>
                         <tr>
@@ -144,14 +187,24 @@
             </div>
         </div>
 
-        <!-- Documentación -->
-        <div id="documentacion" class="section">
-            <h1>Documentación del Sistema</h1>
-            <p>Guías y recursos institucionales.</p>
+        <!-- Mapa Interactivo -->
+        <div id="mapa" class="section">
+            <h1>Mapa Interactivo</h1>
+            <div class="card">
+                <p>Visualización geográfica de coberturas y reportes en tiempo real.</p>
+            </div>
+        </div>
+
+        <!-- Reportes -->
+        <div id="reportes" class="section">
+            <h1>Reportes Generales</h1>
+            <div class="card">
+                <p>Módulo de generación de informes y estadísticas consolidadas.</p>
+            </div>
         </div>
 
     </div>
 
     <script src="app.js"></script>
 </body>
-</html>
+</html> 
