@@ -15,7 +15,8 @@
             <h2>Justicia Social</h2>
         </div>
         
-        <button class="nav-btn active" onclick="showSection('bitacora', event)">Bitácora General</button>
+        <button class="nav-btn active" onclick="showSection('inicio', event)">Inicio</button>
+        <button class="nav-btn" onclick="showSection('bitacora', event)">Bitácora General</button>
         <button class="nav-btn" onclick="showSection('regiduria', event)">Regiduría</button>
         <button class="nav-btn" onclick="showSection('comunicacion', event)">Comunicación</button>
         
@@ -36,13 +37,22 @@
     <!-- Contenido Principal -->
     <div class="main-content">
 
+        <!-- Inicio / Presentación -->
+        <div id="inicio" class="section active">
+            <h1>Bienvenido a la Intranet</h1>
+            <div class="card">
+                <p style="line-height: 1.6; font-size: 1.05rem;">
+                    🏛️ <strong>Justicia Social:</strong> Creemos firmemente en los principios de la equidad, el bienestar colectivo y la transformación de nuestra comunidad. Trabajamos día con día con convicción y corazón para construir un México más justo y fraterno para todas y todos. 🌱✨
+                </p>
+            </div>
+        </div>
+
         <!-- Bitácora General -->
-        <div id="bitacora" class="section active">
+        <div id="bitacora" class="section">
             <h1>Bitácora General</h1>
-            <p>Bienvenido a la Intranet de Justicia Social. Selecciona una opción del menú lateral para gestionar la información.</p>
-            <p style="margin-top: 15px; line-height: 1.6;">
-                🏛️ <strong>Justicia Social</strong> Creemos firmemente en los principios de la equidad, el bienestar colectivo y la transformación de nuestra comunidad. Trabajamos día con día con convicción y corazón para construir un México más justo y fraterno para todas y todos. 🌱✨
-            </p>
+            <div class="card">
+                <p>Registro y consulta general de actividades operativas.</p>
+            </div>
         </div>
 
         <!-- Regiduría -->
@@ -207,4 +217,4 @@
 
     <script src="app.js"></script>
 </body>
-</html> 
+</html>

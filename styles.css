@@ -57,19 +57,19 @@ body {
     margin: 0;
 }
 
-/* Subgrupos de Navegación */
+/* Ajustes de Navegación */
 .nav-group {
     display: flex;
     flex-direction: column;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: 6px;
+    margin-bottom: 6px;
 }
 
 .nav-header {
     font-size: 0.75rem;
     text-transform: uppercase;
     color: var(--text-muted);
-    padding: 6px 12px 2px 12px;
+    padding: 6px 12px 4px 12px;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
@@ -88,9 +88,12 @@ body {
     width: 100%;
 }
 
+/* Alineación correcta para submenús */
 .nav-btn.sub-item {
-    padding-left: 26px;
-    font-size: 0.85rem;
+    padding-left: 24px;
+    font-size: 0.88rem;
+    width: calc(100% - 12px);
+    margin-left: 12px;
 }
 
 .nav-btn:hover { 
@@ -170,7 +173,6 @@ h1 {
     background-color: var(--guinda-hover);
 }
 
-/* Botón de Eliminar */
 .btn-delete {
     background-color: #d9534f;
     color: #ffffff;
