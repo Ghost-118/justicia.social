@@ -81,12 +81,15 @@ document.getElementById('mediaForm')?.addEventListener('submit', async (e) => {
         });
 
         if (res.ok) {
+            alert('¡Reporte multimedia guardado exitosamente!');
             document.getElementById('mediaForm').reset();
             loadMedia();
         } else {
+            alert('Error al guardar el reporte multimedia en el servidor.');
             console.error("Error al guardar multimedia en el servidor");
         }
     } catch (error) {
+        alert('Ocurrió un error al procesar o enviar los archivos multimedia.');
         console.error("Error al guardar multimedia:", error);
     }
 });
@@ -183,13 +186,15 @@ document.getElementById('colectivoForm')?.addEventListener('submit', async (e) =
         });
 
         if (res.ok) {
-            alert('Registro de Colectivo guardado exitosamente.');
+            alert('¡Registro del Colectivo guardado exitosamente!');
             document.getElementById('colectivoForm').reset();
             cargarRegistrosColectivo();
         } else {
+            alert('Error al guardar en el servidor. Revisa los datos de la solicitud.');
             console.error('Error al guardar el registro en el servidor');
         }
     } catch (error) {
+        alert('Ocurrió un error de red o de conexión con el servidor.');
         console.error('Error al enviar el registro del Colectivo:', error);
     }
 });
@@ -272,10 +277,14 @@ document.getElementById('asistenciaForm')?.addEventListener('submit', async (e) 
         });
 
         if (res.ok) {
+            alert('¡Asistencia registrada exitosamente!');
             document.getElementById('asistenciaForm').reset();
             loadAsistencias();
+        } else {
+            alert('Error al registrar la asistencia en el servidor.');
         }
     } catch (error) {
+        alert('Ocurrió un error al procesar el registro de asistencia.');
         console.error("Error al registrar la asistencia:", error);
     }
 });
@@ -343,10 +352,14 @@ document.getElementById('hostForm')?.addEventListener('submit', async (e) => {
         });
 
         if (res.ok) {
+            alert('¡Anfitrión registrado exitosamente!');
             document.getElementById('hostForm').reset();
             loadHosts();
+        } else {
+            alert('Error al registrar el anfitrión en el servidor.');
         }
     } catch (error) {
+        alert('Ocurrió un error al conectar con el servidor.');
         console.error("Error al registrar anfitrión:", error);
     }
 });
