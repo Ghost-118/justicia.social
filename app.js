@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHosts();
     loadMedia();
     loadAsistencias();
+    cargarRegistrosColectivo();
 });
 
 // --- NAVEGACIÓN Y PESTAÑAS ---
@@ -34,7 +35,7 @@ function fileToBase64(file) {
     });
 }
 
-// --- 1. GESTIÓN DE ARCHIVOS MULTIMEDIA ---
+// --- 1. GESTIÓN DE ARCHIVOS MULTIMEDIA / REPORTES ---
 document.getElementById('mediaForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -64,6 +65,7 @@ document.getElementById('mediaForm')?.addEventListener('submit', async (e) => {
         const formattedDate = `${now.toLocaleDateString()} a las ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
         const mediaReport = {
+            tipo: 'reporte',
             title: title,
             photos: photos,
             videos: videos,
@@ -146,7 +148,102 @@ async function deleteMedia(id) {
     }
 }
 
-// --- 2. GESTIÓN DE ASISTENCIAS / PROMOCIONES ---
+// --- 2. GESTIÓN DE REGISTROS - COLECTIVO JUSTICIA SOCIAL ---
+document.getElementById('colectivoForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const colectivoData = {
+        tipo: 'registro_colectivo',
+        conoceJuncal: document.getElementById('conoceJuncal').value,
+        actividadCivica: document.getElementById('actividadCivica').value,
+        acuerdo4T: document.getElementById('acuerdo4T').value,
+        simpatizaPartido: document.getElementById('simpatizaPartido').value,
+        cualPartido: document.getElementById('cualPartido').value,
+        recibirInfo: document.getElementById('recibirInfo').value,
+        celular: document.getElementById('celularEncuesta').value,
+        whatsapp: document.getElementById('wtsEncuesta').value,
+        nombre: document.getElementById('nombreEncuesta').value,
+        apellido: document.getElementById('apellidoEncuesta').value,
+        observaciones: document.getElementById('observacionesEncuesta').value,
+        responsable: document.getElementById('responsableEncuesta').value,
+        fecha: document.getElementById('fechaEncuesta').value,
+        distrito: document.getElementById('distritoEncuesta').value,
+        seccion: document.getElementById('seccionEncuesta').value,
+        manzana: document.getElementById('manzanaEncuesta').value,
+        colonia: document.getElementById('coloniaEncuesta').value,
+        calle: document.getElementById('calleEncuesta').value,
+        numero: document.getElementById('numeroEncuesta').value
+    };
+
+    try {
+        const res = await fetch(`${API_URL}/api/colectivo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(colectivoData)
+        });
+
+        if (res.ok) {
+            alert('Registro de Colectivo guardado exitosamente.');
+            document.getElementById('colectivoForm').reset();
+            cargarRegistrosColectivo();
+        } else {
+            console.error('Error al guardar el registro en el servidor');
+        }
+    } catch (error) {
+        console.error('Error al enviar el registro del Colectivo:', error);
+    }
+});
+
+async function cargarRegistrosColectivo() {
+    const contenedorColectivo = document.getElementById('contenedor-registros-colectivo');
+    if (!contenedorColectivo) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/colectivo`);
+        if (!res.ok) throw new Error('Error al consultar la API de colectivo');
+        const datos = await res.json();
+
+        contenedorColectivo.innerHTML = '';
+
+        if (!datos || datos.length === 0) {
+            contenedorColectivo.innerHTML = '<p style="color: #666;">No hay registros del colectivo guardados.</p>';
+            return;
+        }
+
+        datos.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'media-card';
+            div.innerHTML = `
+                <h3>${item.nombre || ''} ${item.apellido || 'Registro Colectivo'}</h3>
+                <p><strong>Teléfono:</strong> ${item.celular || 'N/A'} | <strong>WhatsApp:</strong> ${item.whatsapp || 'N/A'}</p>
+                <p><strong>Ubicación:</strong> Col. ${item.colonia || 'N/A'}, Calle ${item.calle || 'N/A'} #${item.numero || 'S/N'}, Secc. ${item.seccion || 'N/A'}</p>
+                <p><strong>Observaciones:</strong> ${item.observaciones || 'Sin detalles'}</p>
+                <p><strong>Responsable:</strong> ${item.responsable || 'N/A'}</p>
+                <small style="color: #888;">📅 Fecha: ${item.fecha || 'N/A'}</small>
+                <div style="margin-top: 10px; text-align: right;">
+                    <button class="btn-delete" onclick="eliminarRegistroColectivo(${item.id})">Eliminar</button>
+                </div>
+            `;
+            contenedorColectivo.appendChild(div);
+        });
+    } catch (error) {
+        console.error('Error al cargar los registros del colectivo:', error);
+    }
+}
+
+async function eliminarRegistroColectivo(id) {
+    if (!confirm('¿Deseas eliminar este registro del colectivo?')) return;
+    try {
+        const res = await fetch(`${API_URL}/api/colectivo/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            cargarRegistrosColectivo();
+        }
+    } catch (error) {
+        console.error('Error al eliminar registro:', error);
+    }
+}
+
+// --- 3. GESTIÓN DE ASISTENCIAS / PROMOCIONES ---
 document.getElementById('asistenciaForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -227,7 +324,7 @@ async function deleteAsistencia(id) {
     }
 }
 
-// --- 3. GESTIÓN DE ANFITRIONES ---
+// --- 4. GESTIÓN DE ANFITRIONES ---
 document.getElementById('hostForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
