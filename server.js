@@ -18,6 +18,61 @@ pool.connect((err, client, release) => {
     release();
 });
 
+// --- RUTA RAIZ ---
+app.get('/', (req, res) => {
+    res.send('✅ Backend de Justicia Social activo.');
+});
+
+// --- RUTAS DEL COLECTIVO (NUEVAS) ---
+app.get('/api/colectivo', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM colectivo ORDER BY id DESC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/colectivo', async (req, res) => {
+    try {
+        const {
+            conoceJuncal, actividadCivica, acuerdo4T, simpatizaPartido, cualPartido,
+            recibirInfo, celular, whatsapp, nombre, apellido, observaciones,
+            responsable, fecha, distrito, seccion, manzana, colonia, calle, numero
+        } = req.body;
+
+        const query = `
+            INSERT INTO colectivo (
+                conoce_juncal, actividad_civica, acuerdo_4t, simpatiza_partido, cual_partido,
+                recibir_info, celular, whatsapp, nombre, apellido, observaciones,
+                responsable, fecha, distrito, seccion, manzana, colonia, calle, numero
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+            RETURNING *;
+        `;
+        const values = [
+            conoceJuncal, actividadCivica, acuerdo4T, simpatizaPartido, cualPartido,
+            recibirInfo, celular, whatsapp, nombre, apellido, observaciones,
+            responsable, fecha, distrito, seccion, manzana, colonia, calle, numero
+        ];
+
+        const result = await pool.query(query, values);
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error("Error al insertar en colectivo:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/colectivo/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM colectivo WHERE id = $1', [id]);
+        res.json({ message: 'Registro del colectivo eliminado' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- RUTAS DE ANFITRIONES ---
 app.get('/api/hosts', async (req, res) => {
     try {
@@ -66,7 +121,7 @@ app.post(['/api/media', '/api/media_reports'], async (req, res) => {
     try {
         const result = await pool.query(
             'INSERT INTO media_reports (title, photos, videos, audio, location, date_str) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [title, photos, videos, audio, location, date]
+            [title, JSON.stringify(photos), JSON.stringify(videos), audio, location, date]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -99,7 +154,7 @@ app.post('/api/asistencias', async (req, res) => {
     try {
         const result = await pool.query(
             'INSERT INTO asistencias (title, photos, date_str) VALUES ($1, $2, $3) RETURNING *',
-            [title, photos, date]
+            [title, JSON.stringify(photos), date]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -118,4 +173,4 @@ app.delete('/api/asistencias/:id', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
