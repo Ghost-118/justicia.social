@@ -154,28 +154,29 @@ async function deleteMedia(id) {
 // --- 2. GESTIÓN DE REGISTROS - COLECTIVO JUSTICIA SOCIAL ---
 document.getElementById('colectivoForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log("Iniciando envío de formulario del Colectivo...");
 
     const colectivoData = {
         tipo: 'registro_colectivo',
-        conoceJuncal: document.getElementById('conoceJuncal').value,
-        actividadCivica: document.getElementById('actividadCivica').value,
-        acuerdo4T: document.getElementById('acuerdo4T').value,
-        simpatizaPartido: document.getElementById('simpatizaPartido').value,
-        cualPartido: document.getElementById('cualPartido').value,
-        recibirInfo: document.getElementById('recibirInfo').value,
-        celular: document.getElementById('celularEncuesta').value,
-        whatsapp: document.getElementById('wtsEncuesta').value,
-        nombre: document.getElementById('nombreEncuesta').value,
-        apellido: document.getElementById('apellidoEncuesta').value,
-        observaciones: document.getElementById('observacionesEncuesta').value,
-        responsable: document.getElementById('responsableEncuesta').value,
-        fecha: document.getElementById('fechaEncuesta').value,
-        distrito: document.getElementById('distritoEncuesta').value,
-        seccion: document.getElementById('seccionEncuesta').value,
-        manzana: document.getElementById('manzanaEncuesta').value,
-        colonia: document.getElementById('coloniaEncuesta').value,
-        calle: document.getElementById('calleEncuesta').value,
-        numero: document.getElementById('numeroEncuesta').value
+        conoceJuncal: document.getElementById('conoceJuncal')?.value || '',
+        actividadCivica: document.getElementById('actividadCivica')?.value || '',
+        acuerdo4T: document.getElementById('acuerdo4T')?.value || '',
+        simpatizaPartido: document.getElementById('simpatizaPartido')?.value || '',
+        cualPartido: document.getElementById('cualPartido')?.value || '',
+        recibirInfo: document.getElementById('recibirInfo')?.value || '',
+        celular: document.getElementById('celularEncuesta')?.value || '',
+        whatsapp: document.getElementById('wtsEncuesta')?.value || '',
+        nombre: document.getElementById('nombreEncuesta')?.value || '',
+        apellido: document.getElementById('apellidoEncuesta')?.value || '',
+        observaciones: document.getElementById('observacionesEncuesta')?.value || '',
+        responsable: document.getElementById('responsableEncuesta')?.value || '',
+        fecha: document.getElementById('fechaEncuesta')?.value || '',
+        distrito: document.getElementById('distritoEncuesta')?.value || '',
+        seccion: document.getElementById('seccionEncuesta')?.value || '',
+        manzana: document.getElementById('manzanaEncuesta')?.value || '',
+        colonia: document.getElementById('coloniaEncuesta')?.value || '',
+        calle: document.getElementById('calleEncuesta')?.value || '',
+        numero: document.getElementById('numeroEncuesta')?.value || ''
     };
 
     try {
@@ -186,16 +187,17 @@ document.getElementById('colectivoForm')?.addEventListener('submit', async (e) =
         });
 
         if (res.ok) {
-            alert('¡Registro del Colectivo guardado exitosamente!');
+            alert('¡Registro guardado con éxito en el servidor!');
             document.getElementById('colectivoForm').reset();
             cargarRegistrosColectivo();
         } else {
-            alert('Error al guardar en el servidor. Revisa los datos de la solicitud.');
-            console.error('Error al guardar el registro en el servidor');
+            const errorText = await res.text();
+            alert(`El servidor devolvió un error (${res.status}): ${errorText}`);
+            console.error('Error del servidor:', res.status, errorText);
         }
     } catch (error) {
-        alert('Ocurrió un error de red o de conexión con el servidor.');
-        console.error('Error al enviar el registro del Colectivo:', error);
+        alert('Error de conexión: No se pudo conectar con el backend en Render.');
+        console.error('Error al enviar registro:', error);
     }
 });
 
