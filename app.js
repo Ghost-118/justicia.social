@@ -1,5 +1,8 @@
 const API_URL = 'https://justicia-social-backend.onrender.com';
 
+// Variable global para controlar si se está editando un registro del colectivo
+let idEdicionColectivo = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     loadHosts();
     loadMedia();
@@ -23,6 +26,19 @@ function showSection(sectionId, event) {
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
     }
+}
+
+// --- AUXILIARES PARA ENLACES (MAPS Y WHATSAPP) ---
+function generarEnlaceMaps(calle, numero, colonia) {
+    const direccion = `${calle || ''} ${numero || ''}, ${colonia || ''}, Tonalá, Jalisco`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion.trim())}`;
+}
+
+function generarEnlaceWhatsApp(numeroTel) {
+    if (!numeroTel) return '#';
+    const numLimpio = numeroTel.replace(/\D/g, '');
+    const numFinal = numLimpio.length === 10 ? `52${numLimpio}` : numLimpio;
+    return `https://wa.me/${numFinal}`;
 }
 
 // --- AUXILIAR: CONVERTIR ARCHIVOS A BASE64 ---
@@ -94,7 +110,6 @@ document.getElementById('mediaForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Cargar y mostrar los reportes multimedia
 async function loadMedia() {
     try {
         const response = await fetch(`${API_URL}/api/media`);
@@ -179,16 +194,27 @@ document.getElementById('colectivoForm')?.addEventListener('submit', async (e) =
         numero: document.getElementById('numeroEncuesta')?.value || ''
     };
 
+    const esEdicion = idEdicionColectivo !== null;
+    const url = esEdicion ? `${API_URL}/api/colectivo/${idEdicionColectivo}` : `${API_URL}/api/colectivo`;
+    const metodo = esEdicion ? 'PUT' : 'POST';
+
     try {
-        const res = await fetch(`${API_URL}/api/colectivo`, {
-            method: 'POST',
+        const res = await fetch(url, {
+            method: metodo,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(colectivoData)
         });
 
         if (res.ok) {
-            alert('¡Registro guardado con éxito en el servidor!');
+            alert(esEdicion ? '¡Registro actualizado con éxito!' : '¡Registro guardado con éxito en el servidor!');
+            
+            // Resetear estado del formulario
             document.getElementById('colectivoForm').reset();
+            idEdicionColectivo = null;
+            
+            const btnSubmit = document.querySelector('#colectivoForm button[type="submit"]');
+            if (btnSubmit) btnSubmit.textContent = 'Guardar Registro Colectivo';
+
             cargarRegistrosColectivo();
         } else {
             const errorText = await res.text();
@@ -218,17 +244,32 @@ async function cargarRegistrosColectivo() {
         }
 
         datos.forEach(item => {
+            const tieneWhatsapp = (item.whatsapp || '').toLowerCase().trim() === 'sí' || (item.whatsapp || '').toLowerCase().trim() === 'si';
+            const linkWa = tieneWhatsapp ? generarEnlaceWhatsApp(item.celular) : null;
+            const linkMaps = generarEnlaceMaps(item.calle, item.numero, item.colonia);
+
             const div = document.createElement('div');
             div.className = 'media-card';
             div.innerHTML = `
                 <h3>${item.nombre || ''} ${item.apellido || 'Registro Colectivo'}</h3>
-                <p><strong>Teléfono:</strong> ${item.celular || 'N/A'} | <strong>WhatsApp:</strong> ${item.whatsapp || 'N/A'}</p>
-                <p><strong>Ubicación:</strong> Col. ${item.colonia || 'N/A'}, Calle ${item.calle || 'N/A'} #${item.numero || 'S/N'}, Secc. ${item.seccion || 'N/A'}</p>
+                
+                <p>
+                    <strong>Teléfono:</strong> ${item.celular || 'N/A'} 
+                    ${tieneWhatsapp && linkWa ? `<a href="${linkWa}" target="_blank" style="margin-left:8px; color:#25D366; font-weight:bold; text-decoration:none;">📱 Abrir WhatsApp</a>` : ''}
+                </p>
+                
+                <p>
+                    <strong>Ubicación:</strong> Col. ${item.colonia || 'N/A'}, Calle ${item.calle || 'N/A'} #${item.numero || 'S/N'}, Secc. ${item.seccion || 'N/A'}
+                    <a href="${linkMaps}" target="_blank" style="margin-left:8px; color:#1a73e8; font-weight:bold; text-decoration:none;">📍 Ver en Google Maps</a>
+                </p>
+                
                 <p><strong>Observaciones:</strong> ${item.observaciones || 'Sin detalles'}</p>
                 <p><strong>Responsable:</strong> ${item.responsable || 'N/A'}</p>
                 <small style="color: #888;">📅 Fecha: ${item.fecha || 'N/A'}</small>
-                <div style="margin-top: 10px; text-align: right;">
-                    <button class="btn-delete" onclick="eliminarRegistroColectivo(${item.id})">Eliminar</button>
+                
+                <div style="margin-top: 12px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                    <button type="button" class="btn-edit" style="background-color: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;" onclick='prepararEdicionColectivo(${JSON.stringify(item).replace(/'/g, "&apos;")})'>✏️ Editar</button>
+                    <button type="button" class="btn-delete" onclick="eliminarRegistroColectivo(${item.id})">🗑️ Eliminar</button>
                 </div>
             `;
             contenedorColectivo.appendChild(div);
@@ -236,6 +277,38 @@ async function cargarRegistrosColectivo() {
     } catch (error) {
         console.error('Error al cargar los registros del colectivo:', error);
     }
+}
+
+// Función para cargar los datos seleccionados al formulario y habilitar modo Edición
+function prepararEdicionColectivo(item) {
+    idEdicionColectivo = item.id;
+
+    if (document.getElementById('conoceJuncal')) document.getElementById('conoceJuncal').value = item.conoce_juncal || item.conoceJuncal || '';
+    if (document.getElementById('actividadCivica')) document.getElementById('actividadCivica').value = item.actividad_civica || item.actividadCivica || '';
+    if (document.getElementById('acuerdo4T')) document.getElementById('acuerdo4T').value = item.acuerdo_4t || item.acuerdo4T || '';
+    if (document.getElementById('simpatizaPartido')) document.getElementById('simpatizaPartido').value = item.simpatiza_partido || item.simpatizaPartido || '';
+    if (document.getElementById('cualPartido')) document.getElementById('cualPartido').value = item.cual_partido || item.cualPartido || '';
+    if (document.getElementById('recibirInfo')) document.getElementById('recibirInfo').value = item.recibir_info || item.recibirInfo || '';
+    if (document.getElementById('celularEncuesta')) document.getElementById('celularEncuesta').value = item.celular || '';
+    if (document.getElementById('wtsEncuesta')) document.getElementById('wtsEncuesta').value = item.whatsapp || '';
+    if (document.getElementById('nombreEncuesta')) document.getElementById('nombreEncuesta').value = item.nombre || '';
+    if (document.getElementById('apellidoEncuesta')) document.getElementById('apellidoEncuesta').value = item.apellido || '';
+    if (document.getElementById('observacionesEncuesta')) document.getElementById('observacionesEncuesta').value = item.observaciones || '';
+    if (document.getElementById('responsableEncuesta')) document.getElementById('responsableEncuesta').value = item.responsable || '';
+    if (document.getElementById('fechaEncuesta')) document.getElementById('fechaEncuesta').value = item.fecha || '';
+    if (document.getElementById('distritoEncuesta')) document.getElementById('distritoEncuesta').value = item.distrito || '';
+    if (document.getElementById('seccionEncuesta')) document.getElementById('seccionEncuesta').value = item.seccion || '';
+    if (document.getElementById('manzanaEncuesta')) document.getElementById('manzanaEncuesta').value = item.manzana || '';
+    if (document.getElementById('coloniaEncuesta')) document.getElementById('coloniaEncuesta').value = item.colonia || '';
+    if (document.getElementById('calleEncuesta')) document.getElementById('calleEncuesta').value = item.calle || '';
+    if (document.getElementById('numeroEncuesta')) document.getElementById('numeroEncuesta').value = item.numero || '';
+
+    // Cambiar visualmente el texto del botón de guardar
+    const btnSubmit = document.querySelector('#colectivoForm button[type="submit"]');
+    if (btnSubmit) btnSubmit.textContent = '🔄 Actualizar Registro Colectivo';
+
+    // Desplazar pantalla suavemente hacia el formulario
+    document.getElementById('colectivoForm')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function eliminarRegistroColectivo(id) {
